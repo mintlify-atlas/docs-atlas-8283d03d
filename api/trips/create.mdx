@@ -1,0 +1,143 @@
+---
+title: "Create a trip"
+description: "POST /creadorViatges/creator/trips — create a new trip."
+---
+
+Create a new trip. Only users with the `Creador` or `Admin` role can use this endpoint.
+
+<Note>
+  Requires authentication. The authenticated user must have the `Creador` or `Admin` role.
+</Note>
+
+## Request
+
+**`POST /creadorViatges/creator/trips`**
+
+### Body parameters
+
+<ParamField body="nom" type="string" required>
+  The name of the trip.
+</ParamField>
+
+<ParamField body="desti" type="string" required>
+  The destination of the trip.
+</ParamField>
+
+<ParamField body="data_inici" type="string" required>
+  Start date in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="data_fi" type="string" required>
+  End date in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="maxim_participants" type="integer" default="10">
+  Maximum number of participants. Defaults to `10`.
+</ParamField>
+
+<ParamField body="descripcio" type="string">
+  A description of the trip.
+</ParamField>
+
+<ParamField body="estat" type="string" default="Planificant">
+  Initial planning status. One of `"Planificant"`, `"Actiu"`, `"Complet"`, or `"Cancel·lat"`.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="integer" required>
+  Unique identifier of the newly created trip.
+</ResponseField>
+
+<ResponseField name="nom" type="string" required>
+  The trip's name.
+</ResponseField>
+
+<ResponseField name="desti" type="string" required>
+  The trip's destination.
+</ResponseField>
+
+<ResponseField name="data_inici" type="string" required>
+  Start date.
+</ResponseField>
+
+<ResponseField name="data_fi" type="string" required>
+  End date.
+</ResponseField>
+
+<ResponseField name="descripcio" type="string">
+  Description of the trip.
+</ResponseField>
+
+<ResponseField name="estat" type="string" required>
+  Planning status.
+</ResponseField>
+
+<ResponseField name="maxim_participants" type="integer" required>
+  Maximum number of participants.
+</ResponseField>
+
+<ResponseField name="creador_id" type="integer" required>
+  ID of the user who created the trip.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:8000/creadorViatges/creator/trips \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nom": "Alpine Hiking Week",
+    "desti": "Swiss Alps",
+    "data_inici": "2026-07-01",
+    "data_fi": "2026-07-07",
+    "maxim_participants": 12,
+    "descripcio": "A week of guided hiking in the Alps.",
+    "estat": "Planificant"
+  }'
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.post(
+  'http://localhost:8000/creadorViatges/creator/trips',
+  {
+    nom: 'Alpine Hiking Week',
+    desti: 'Swiss Alps',
+    data_inici: '2026-07-01',
+    data_fi: '2026-07-07',
+    maxim_participants: 12,
+    descripcio: 'A week of guided hiking in the Alps.',
+    estat: 'Planificant',
+  },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 7,
+  "nom": "Alpine Hiking Week",
+  "desti": "Swiss Alps",
+  "data_inici": "2026-07-01",
+  "data_fi": "2026-07-07",
+  "descripcio": "A week of guided hiking in the Alps.",
+  "estat": "Planificant",
+  "maxim_participants": 12,
+  "creador_id": 3
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `401` | Missing or invalid authentication token |
+| `403` | `"Permiso denegado"` — your role is not `Creador` or `Admin` |

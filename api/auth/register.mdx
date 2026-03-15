@@ -1,0 +1,97 @@
+---
+title: "Register"
+description: "POST /auth/register — create a new user account."
+---
+
+Create a new user account. The new account is assigned the `Viatger` role by default.
+
+## Request
+
+**`POST /auth/register`**
+
+### Body parameters
+
+<ParamField body="email" type="string" required>
+  A valid, unique email address for the account.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The account password.
+</ParamField>
+
+<ParamField body="full_name" type="string">
+  The user's display name.
+</ParamField>
+
+<ParamField body="bio" type="string">
+  A short biography or description for the user's profile.
+</ParamField>
+
+<ParamField body="rol" type="string" default="Viatger">
+  The user's role. One of `"Viatger"`, `"Creador"`, or `"Admin"`. Defaults to `"Viatger"`.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="integer" required>
+  The newly created user's unique identifier.
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  The user's email address.
+</ResponseField>
+
+<ResponseField name="full_name" type="string">
+  The user's display name.
+</ResponseField>
+
+<ResponseField name="rol" type="string" required>
+  The user's role (`"Viatger"` by default).
+</ResponseField>
+
+<ResponseField name="bio" type="string">
+  The user's biography.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "alice@example.com",
+    "password": "secret123",
+    "full_name": "Alice Smith"
+  }'
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.post('http://localhost:8000/auth/register', {
+  email: 'alice@example.com',
+  password: 'secret123',
+  full_name: 'Alice Smith',
+});
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 42,
+  "email": "alice@example.com",
+  "full_name": "Alice Smith",
+  "rol": "Viatger",
+  "bio": null
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `400` | `"Email ya registrado"` — an account with this email already exists |

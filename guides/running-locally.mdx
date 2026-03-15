@@ -1,0 +1,135 @@
+---
+title: "Running locally"
+description: "Get the full TravelConnect stack running on your machine: FastAPI backend, React frontend, and MySQL database."
+---
+
+This guide walks you through starting both the backend and frontend so you can run TravelConnect end-to-end on your local machine. For in-depth configuration details, see the [backend setup](/guides/backend-setup) and [frontend setup](/guides/frontend-setup) guides.
+
+## Prerequisites
+
+| Requirement | Minimum version |
+|---|---|
+| Python | 3.8+ |
+| Node.js | 18+ |
+| npm | bundled with Node.js |
+| MySQL | 5.7+ or 8.0+ |
+
+## Start the full stack
+
+<Steps>
+  <Step title="Start MySQL and create the database">
+    Make sure your MySQL server is running, then create the database TravelConnect expects:
+
+    ```sql
+    CREATE DATABASE travelconect;
+    ```
+
+    <Note>
+      The database name is `travelconect` (one 'n') — this matches the connection string in `db/database.py`.
+    </Note>
+  </Step>
+
+  <Step title="Start the backend">
+    Open a terminal in `Backend/` and start the FastAPI server:
+
+    ```bash
+    cd Backend
+    pip install fastapi uvicorn sqlalchemy pymysql python-jose passlib bcrypt python-multipart
+    uvicorn main:app --reload
+    ```
+
+    The API will be available at `http://localhost:8000`. SQLAlchemy automatically creates all database tables on first run.
+
+    For detailed backend configuration, see the [backend setup guide](/guides/backend-setup).
+  </Step>
+
+  <Step title="Start the frontend">
+    Open a second terminal in `FrontEnd/` and start the Vite dev server:
+
+    ```bash
+    cd FrontEnd
+    npm install
+    npm run dev
+    ```
+
+    The app will be available at `http://localhost:5173`.
+
+    For detailed frontend configuration, see the [frontend setup guide](/guides/frontend-setup).
+  </Step>
+
+  <Step title="Verify everything is running">
+    Open these URLs to confirm both services are up:
+
+    | Service | URL |
+    |---|---|
+    | Frontend app | `http://localhost:5173` |
+    | Backend API root | `http://localhost:8000` |
+    | Swagger UI (interactive docs) | `http://localhost:8000/docs` |
+
+    The backend root returns `{"mensaje": "HOLA"}` — a quick sanity check that the API is running.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port already in use">
+    If port 8000 or 5173 is already occupied, you'll see an error when starting the server.
+
+    To find and kill the process using a port:
+
+    ```bash
+    # On macOS/Linux
+    lsof -ti :8000 | xargs kill
+    lsof -ti :5173 | xargs kill
+    ```
+
+    ```powershell
+    # On Windows
+    netstat -ano | findstr :8000
+    taskkill /PID <PID> /F
+    ```
+
+    Alternatively, start uvicorn on a different port with `uvicorn main:app --reload --port 8001`, then update the `baseURL` in `FrontEnd/src/servicios/api.js` to match.
+  </Accordion>
+
+  <Accordion title="CORS errors in the browser">
+    The backend only allows requests from `http://localhost:5173` and `http://127.0.0.1:5173`. If your frontend runs on a different origin, you'll see CORS errors in the browser console.
+
+    To fix this, add your origin to the `allow_origins` list in `Backend/main.py`:
+
+    ```python
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",  # add your origin here
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    ```
+  </Accordion>
+
+  <Accordion title="Database connection refused">
+    If the backend fails to start with a database connection error, check:
+
+    1. **MySQL is running** — confirm with `mysql -u root -p`.
+    2. **Credentials match** — the default connection string in `db/database.py` is `mysql+pymysql://root:1234@localhost:3306/travelconect`. Update it if your MySQL user or password differs.
+    3. **Database exists** — run `SHOW DATABASES;` in MySQL and confirm `travelconect` is listed.
+    4. **PyMySQL is installed** — run `pip install pymysql` if you skipped it.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Backend setup" icon="server" href="/guides/backend-setup">
+    Detailed guide to configuring the FastAPI backend, routers, and database.
+  </Card>
+  <Card title="Frontend setup" icon="browser" href="/guides/frontend-setup">
+    Detailed guide to the React/Vite frontend, dependencies, and project structure.
+  </Card>
+</CardGroup>

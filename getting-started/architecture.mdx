@@ -1,0 +1,152 @@
+---
+title: "Architecture"
+description: "How the TravelConnect frontend and backend work together"
+---
+
+TravelConnect uses a decoupled architecture: a React single-page application communicates with a FastAPI REST API over HTTP. The two services run on separate ports and are developed independently.
+
+## Tech stack
+
+| Layer | Technology | Version |
+|---|---|---|
+| Frontend framework | React | 19 |
+| Frontend build tool | Vite | 7 |
+| Frontend routing | React Router | 7 |
+| UI components | Bootstrap + React-Bootstrap | 5 |
+| HTTP client | Axios | 1.x |
+| Token decoding | jwt-decode | 4 |
+| Backend framework | FastAPI | latest |
+| ORM | SQLAlchemy | latest |
+| Database | MySQL | 8+ |
+| Auth tokens | JWT (HS256) | — |
+
+## Service overview
+
+The frontend dev server runs on **port 5173** (Vite default) and the FastAPI backend runs on **port 8000** (Uvicorn default). In production these would sit behind a reverse proxy, but locally both servers run independently.
+
+```
+Browser  →  http://localhost:5173  →  React (Vite)
+                                          ↓ Axios HTTP requests
+                                   http://localhost:8000  →  FastAPI
+                                                                ↓
+                                                          SQLAlchemy
+                                                                ↓
+                                                        MySQL database
+```
+
+CORS is configured in `main.py` to explicitly allow requests from `http://localhost:5173` and `http://127.0.0.1:5173`, with credentials enabled so the browser can send the `Authorization` header.
+
+## Backend router modules
+
+The FastAPI application registers six routers, each responsible for a distinct domain:
+
+| Router | Prefix | Responsibility |
+|---|---|---|
+| `auth` | `/auth` | Registration (`POST /auth/register`) and login (`POST /auth/login`). Returns a JWT on successful login. |
+| `usuari` (users) | `/users` | User profile reads and updates, and promotion-to-Creador requests. |
+| `viatge` (trips) | `/viatge` | List all trips, get trip details, enroll in a trip, leave a trip. |
+| `creadorViatges` (trip creator) | `/creadorViatges` | Create new trips and edit or delete existing ones. Restricted to Creador and Admin roles. |
+| `missatges` (chat) | `/missatges` | Read and send messages within a trip's participant chat. |
+| `administrador` (admin) | `/admin` | List all users, change user roles, list promotion requests, approve or reject them. |
+
+You can explore and test every endpoint interactively at `http://localhost:8000/docs` (Swagger UI) or `http://localhost:8000/redoc` (ReDoc).
+
+## Role-based access control
+
+Every user account has one of three roles, stored in the `usuari` database table and embedded in the JWT at login time:
+
+| Role | Value in token | Capabilities |
+|---|---|---|
+| Viatger | `"Viatger"` | Browse trips, enroll and leave trips, access trip chat, request promotion to Creador |
+| Creador | `"Creador"` | All Viatger capabilities, plus create trips and edit or delete their own trips |
+| Admin | `"Admin"` | All Creador capabilities, plus manage all users and approve or reject promotion requests |
+
+The frontend enforces roles via the `RutaProtegida` component (`src/componentes/rutaProtegida`). Each protected route declares which roles can access it:
+
+```javascript
+// All authenticated users
+<Route element={<RutaProtegida rolesPermitidos={['Viatger', 'Creador', 'Admin']} />}>
+  <Route path="/dashboard" element={<ListaViajes />} />
+  <Route path="/trips/:id" element={<DetalleViaje />} />
+</Route>
+
+// Creador and Admin only
+<Route element={<RutaProtegida rolesPermitidos={['Creador', 'Admin']} />}>
+  <Route path="/trips/create" element={<CrearViaje />} />
+  <Route path="/trips/:id/edit" element={<EditarViaje />} />
+</Route>
+
+// Admin only
+<Route element={<RutaProtegida rolesPermitidos={['Admin']} />}>
+  <Route path="/admin/users" element={<GestioUsuaris />} />
+  <Route path="/admin/requests" element={<GestioPeticions />} />
+</Route>
+```
+
+The backend enforces roles independently by inspecting the `rol` claim in the decoded JWT on each protected endpoint.
+
+## JWT authentication flow
+
+Tokens are issued as HS256-signed JWTs with a 30-minute expiry. The token payload carries three claims:
+
+| Claim | Content |
+|---|---|
+| `sub` | User ID (integer, stored as string) |
+| `rol` | User role string (`"Viatger"`, `"Creador"`, or `"Admin"`) |
+| `username` | User's `full_name`, falling back to `email` |
+
+The flow from login to a protected API call works as follows:
+
+<Steps>
+  <Step title="User submits credentials">
+    The frontend sends a `POST /auth/login` request with `username` (email) and `password` as form data using `OAuth2PasswordRequestForm`.
+  </Step>
+  <Step title="Backend issues a token">
+    If credentials are valid, the backend calls `create_access_token` with the user's ID, role, and display name, then returns:
+
+    ```json
+    {
+      "access_token": "<jwt>",
+      "token_type": "bearer",
+      "rol": "Viatger"
+    }
+    ```
+  </Step>
+  <Step title="Frontend stores the token">
+    The `AuthProvider` context (`src/contexto/auth`) stores the token. Subsequent Axios requests attach it as a `Bearer` token in the `Authorization` header.
+  </Step>
+  <Step title="Backend validates the token">
+    The `get_current_user` dependency in `auth/deps.py` decodes the token, extracts the user ID from the `sub` claim, and loads the matching `Usuari` row from the database. If the token is missing, expired, or invalid, it returns `401 Unauthorized`.
+  </Step>
+</Steps>
+
+<Warning>
+  The `SECRET_KEY` in `auth/utils.py` and `auth/deps.py` is hardcoded to `"clavemegasecreta"` in the source. Change this to a strong, randomly generated secret before deploying to any non-local environment.
+</Warning>
+
+## Database schema (key models)
+
+SQLAlchemy creates all tables automatically on startup via `Base.metadata.create_all(bind=engine)`. The three core models are:
+
+- **`Usuari`** — Stores email, bcrypt-hashed password, full name, role, and bio. The `rol` field defaults to `"Viatger"`.
+- **`Viatge`** — Stores trip name, destination, start/end dates, max participants, description, and status (`Planificant`, `Actiu`, `Complet`, `Cancel·lat`). Linked to its creator via `creador_id`.
+- **`UsuariViatge`** — Junction table linking users to the trips they've enrolled in.
+
+Additional models cover chat messages (`MissatgeXat`) and promotion requests (`PeticioPromo`).
+
+## Related docs
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="lock" href="/features/authentication">
+    Detailed walkthrough of the login, registration, and token refresh flows
+  </Card>
+  <Card title="User roles" icon="users" href="/features/user-roles">
+    Full breakdown of what each role can access
+  </Card>
+  <Card title="Trip management" icon="map" href="/features/trips">
+    How trips are created, joined, and managed
+  </Card>
+  <Card title="API reference" icon="code" href="/api/overview">
+    Complete endpoint reference for all six routers
+  </Card>
+</CardGroup>

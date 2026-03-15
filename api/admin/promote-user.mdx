@@ -1,0 +1,90 @@
+---
+title: "Promote user"
+description: "PUT /admin/users/{user_id}/promote — change a user's role."
+---
+
+Change the role of any user. Use this to promote a user to `Creador` or `Admin`, or to demote them back to `Viatger`.
+
+<Note>
+  This endpoint is intended for admin use.
+</Note>
+
+## Request
+
+**`PUT /admin/users/{user_id}/promote`**
+
+### Path parameters
+
+<ParamField path="user_id" type="integer" required>
+  The unique identifier of the user whose role you want to change.
+</ParamField>
+
+### Body parameters
+
+<ParamField body="new_rol" type="string" required>
+  The new role for the user. One of `"Viatger"`, `"Creador"`, or `"Admin"`.
+</ParamField>
+
+## Response
+
+Returns the updated user object.
+
+<ResponseField name="id" type="integer" required>
+  The user's unique identifier.
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  The user's email address.
+</ResponseField>
+
+<ResponseField name="full_name" type="string">
+  The user's display name.
+</ResponseField>
+
+<ResponseField name="rol" type="string" required>
+  The user's updated role.
+</ResponseField>
+
+<ResponseField name="bio" type="string">
+  The user's biography.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT http://localhost:8000/admin/users/42/promote \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"new_rol": "Creador"}'
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.put(
+  'http://localhost:8000/admin/users/42/promote',
+  { new_rol: 'Creador' },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 42,
+  "email": "alice@example.com",
+  "full_name": "Alice Smith",
+  "rol": "Creador",
+  "bio": "Avid traveler."
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `404` | `"Usuario no encontrado"` — no user with that ID exists |

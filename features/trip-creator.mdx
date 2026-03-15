@@ -1,0 +1,100 @@
+---
+title: "Trip creator"
+description: "How Creador and Admin users create and manage trips."
+---
+
+Users with the **Creador** or **Admin** role can publish new trips and update existing ones. All trip creation and editing requests go through the `/creadorViatges/creator/` prefix.
+
+## Role check
+
+Every endpoint in the creator router verifies the user's role before proceeding:
+
+```python
+# routers/creadorViatges.py
+if usuari.rol not in ["Creador", "Admin"]:
+    raise HTTPException(
+        status_code=403,
+        detail=f"Permiso denegado. Tu rol actual es: {usuari.rol}"
+    )
+```
+
+A `403 Forbidden` is returned if the authenticated user holds the Viatger role.
+
+## Creating a trip
+
+Send a `POST` request with the trip data:
+
+```bash
+POST /creadorViatges/creator/trips
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+```json
+{
+  "nom": "Ruta pels Pirineus",
+  "descripcio": "Five-day hiking route through the Pyrenees.",
+  "desti": "Pirineus",
+  "data_inici": "2026-07-01",
+  "data_fi": "2026-07-05",
+  "maxim_participants": 12,
+  "estat": "Planificant"
+}
+```
+
+The `creador_id` is set automatically from the authenticated user's token — you do not supply it in the request body.
+
+### Trip fields reference
+
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `nom` | Yes | — | Trip name (max 50 chars) |
+| `desti` | Yes | — | Destination (max 50 chars) |
+| `data_inici` | Yes | — | Start date in `YYYY-MM-DD` format |
+| `data_fi` | Yes | — | End date in `YYYY-MM-DD` format |
+| `maxim_participants` | No | `10` | Maximum number of participants |
+| `descripcio` | No | — | Trip description (max 200 chars) |
+| `estat` | No | `Planificant` | One of: `Planificant`, `Actiu`, `Complet`, `Cancel·lat` |
+
+## Editing a trip
+
+```bash
+PUT /creadorViatges/creator/trips/{id}
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+Submit only the fields you want to update. The backend merges the payload into the existing record.
+
+**Ownership rules:**
+
+- A **Creador** can only edit trips they created. If the trip's `creador_id` does not match the requesting user's ID, the endpoint returns `404`.
+- An **Admin** can edit any trip. The router passes `usuari.rol` to the CRUD layer so it can skip the ownership check for Admins.
+
+## Create trip form flow
+
+<Steps>
+  <Step title="Navigate to /trips/create">
+    This route is protected by `RutaProtegida` and only accessible to Creador and Admin users. From the trip list at `/dashboard`, the **+ Crear Nuevo Viaje** button is shown only when `usuario.role === 'Creador' || usuario.role === 'Admin'`.
+  </Step>
+  <Step title="Fill in the form">
+    Complete all required fields: trip name, description, destination, start date, end date, and maximum participants. Set the initial status using the dropdown — new trips typically start as `Planificant`.
+  </Step>
+  <Step title="Submit">
+    The form sends `POST /creadorViatges/creator/trips`. The `maxim_participants` value is cast to an integer before submission.
+
+    ```javascript
+    await api.post('/creadorViatges/creator/trips', {
+      ...formData,
+      maxim_participants: parseInt(formData.maxim_participants || 10),
+    });
+    ```
+  </Step>
+  <Step title="Redirect to dashboard">
+    On success the user is redirected to `/dashboard` where the new trip appears in the list.
+  </Step>
+</Steps>
+
+<Tip>
+To edit an existing trip, navigate to its detail page at `/trips/:id` and click **Editar Viaje**. This button is visible only to the trip's creator and to Admins.
+</Tip>

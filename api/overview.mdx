@@ -1,0 +1,65 @@
+---
+title: "API overview"
+description: "Base URL, authentication, and available endpoints for the TravelConnect API."
+---
+
+The TravelConnect API is a REST API that lets you manage trips, users, chat messages, and admin operations.
+
+**Base URL:** `http://localhost:8000`
+
+## Authentication
+
+Most endpoints require a Bearer JWT token in the `Authorization` header. Obtain a token by calling `POST /auth/login`.
+
+```http
+Authorization: Bearer <your_token>
+```
+
+<CodeGroup>
+
+```bash cURL
+curl http://localhost:8000/viatge/trips \
+  -H "Authorization: Bearer <your_token>"
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.get('http://localhost:8000/viatge/trips', {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+```
+
+</CodeGroup>
+
+## HTTP status codes
+
+| Code | Meaning |
+|------|---------|
+| `200` | Request succeeded |
+| `400` | Bad request — invalid input or business rule violation |
+| `401` | Unauthorized — missing or invalid token |
+| `403` | Forbidden — insufficient role permissions |
+| `404` | Not found — resource does not exist |
+
+## Available sections
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="lock" href="/api/auth/login">
+    Register an account and log in to obtain a JWT token.
+  </Card>
+  <Card title="Trips" icon="map" href="/api/trips/list">
+    Browse, join, leave, create, and edit trips.
+  </Card>
+  <Card title="Users" icon="user" href="/api/users/me">
+    View and update your profile, and request a role promotion.
+  </Card>
+  <Card title="Chat" icon="message-circle" href="/api/chat/get-messages">
+    Read and send messages in a trip's chat.
+  </Card>
+  <Card title="Admin" icon="shield" href="/api/admin/list-users">
+    Manage users and handle promotion requests.
+  </Card>
+</CardGroup>

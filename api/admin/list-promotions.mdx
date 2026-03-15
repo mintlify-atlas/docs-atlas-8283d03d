@@ -1,0 +1,73 @@
+---
+title: "List promotion requests"
+description: "GET /admin/users/promotions — retrieve all pending and reviewed promotion requests."
+---
+
+Returns a list of all promotion requests submitted by users.
+
+<Note>
+  This endpoint is intended for admin use.
+</Note>
+
+## Request
+
+**`GET /admin/users/promotions`**
+
+This endpoint takes no parameters.
+
+## Response
+
+Returns an array of promotion request objects.
+
+<ResponseField name="id" type="integer" required>
+  Unique identifier of the promotion request.
+</ResponseField>
+
+<ResponseField name="missatge_peticio" type="string" required>
+  The message the user submitted when requesting promotion.
+</ResponseField>
+
+<ResponseField name="estat" type="string" required>
+  Current status of the request. One of `"pendent"`, `"aprovat"`, or `"denegat"`.
+</ResponseField>
+
+<ResponseField name="usuari_solicitant" type="integer" required>
+  ID of the user who submitted the promotion request.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl http://localhost:8000/admin/users/promotions \
+  -H "Authorization: Bearer <your_token>"
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.get('http://localhost:8000/admin/users/promotions', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+[
+  {
+    "id": 3,
+    "missatge_peticio": "I want to organize hiking trips for our community.",
+    "estat": "pendent",
+    "usuari_solicitant": 42
+  }
+]
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `404` | `"Promociones no encontradas"` — no promotion requests found |

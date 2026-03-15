@@ -1,0 +1,83 @@
+---
+title: "Update promotion request"
+description: "PUT /admin/promotions/{user_id} — approve or deny a promotion request."
+---
+
+Update the status of a user's promotion request. Use this to approve or deny a request to become a `Creador`.
+
+<Note>
+  This endpoint is intended for admin use.
+</Note>
+
+## Request
+
+**`PUT /admin/promotions/{user_id}`**
+
+### Path parameters
+
+<ParamField path="user_id" type="integer" required>
+  The ID of the user whose promotion request you want to update.
+</ParamField>
+
+### Body parameters
+
+<ParamField body="new_estado" type="string" required>
+  The new status for the promotion request. One of `"aprovat"` or `"denegat"`.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="integer" required>
+  Unique identifier of the promotion request.
+</ResponseField>
+
+<ResponseField name="missatge_peticio" type="string" required>
+  The message the user submitted.
+</ResponseField>
+
+<ResponseField name="estat" type="string" required>
+  The updated status of the request.
+</ResponseField>
+
+<ResponseField name="usuari_solicitant" type="integer" required>
+  ID of the user who submitted the request.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT http://localhost:8000/admin/promotions/42 \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"new_estado": "aprovat"}'
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.put(
+  'http://localhost:8000/admin/promotions/42',
+  { new_estado: 'aprovat' },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 3,
+  "missatge_peticio": "I want to organize hiking trips for our community.",
+  "estat": "aprovat",
+  "usuari_solicitant": 42
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `404` | `"Promocion no encontrada"` — no promotion request found for that user ID |

@@ -1,0 +1,138 @@
+---
+title: "Frontend setup"
+description: "Set up the TravelConnect React/Vite frontend, understand the project structure, and configure the API connection."
+---
+
+The TravelConnect frontend is a React 19 single-page application built with Vite. It communicates with the FastAPI backend over HTTP using Axios and uses JWT tokens stored in `localStorage` for authentication.
+
+## Prerequisites
+
+| Requirement | Minimum version |
+|---|---|
+| Node.js | 18+ |
+| npm | bundled with Node.js |
+
+The backend must also be running at `http://localhost:8000`. See [running locally](/guides/running-locally) for the full stack setup.
+
+## Installation
+
+<Steps>
+  <Step title="Install dependencies">
+    From the `FrontEnd/` directory, install all npm packages:
+
+    ```bash
+    npm install
+    ```
+  </Step>
+
+  <Step title="Start the dev server">
+    ```bash
+    npm run dev
+    ```
+
+    <Note>
+      The dev server runs on port 5173 by default (`http://localhost:5173`). This port is hardcoded in the backend's CORS configuration, so avoid changing it during local development.
+    </Note>
+  </Step>
+</Steps>
+
+## Available scripts
+
+All scripts are defined in `package.json`:
+
+| Script | Command | Description |
+|---|---|---|
+| `dev` | `npm run dev` | Start the Vite development server with hot module replacement |
+| `build` | `npm run build` | Compile and bundle for production output to `dist/` |
+| `preview` | `npm run preview` | Locally preview the production build |
+| `lint` | `npm run lint` | Run ESLint across the project |
+
+## Key dependencies
+
+| Package | Version | Purpose |
+|---|---|---|
+| `react` | ^19.2.0 | UI library |
+| `react-dom` | ^19.2.0 | DOM rendering |
+| `react-router-dom` | ^7.13.1 | Client-side routing |
+| `axios` | ^1.13.6 | HTTP client for API calls |
+| `bootstrap` | ^5.3.8 | CSS framework |
+| `react-bootstrap` | ^2.10.10 | Bootstrap components for React |
+| `jwt-decode` | ^4.0.0 | Decode JWT tokens on the client |
+
+## Project structure
+
+```
+src/
+├── main.jsx           # App entry point
+├── App.jsx            # Root component with routing
+├── App.css            # Global styles
+├── paginas/           # Page-level components
+│   ├── auth/          # Login and registration pages
+│   ├── viajes/        # Trip list, detail, create, and edit pages
+│   ├── admin/         # Admin-only pages (user and request management)
+│   ├── paginaInicio.jsx
+│   ├── perfil.jsx
+│   └── formularioPeti.jsx
+├── componentes/       # Reusable UI components
+│   ├── diseno/        # Layout components (e.g. navigation bar)
+│   ├── rutaProtegida.jsx
+│   ├── tarjetaViaje.jsx
+│   └── TripChat.jsx
+├── contexto/
+│   └── auth.jsx       # AuthContext and AuthProvider
+└── servicios/
+    └── api.js         # Axios instance and API helpers
+```
+
+### `src/paginas/`
+
+Page-level components, each mapped to a route in `App.jsx`. Organised into subdirectories by feature: `auth/`, `viajes/`, and `admin/`.
+
+### `src/componentes/`
+
+Shared UI components used across multiple pages. `diseno/` holds layout components such as the navigation bar. `tarjetaViaje.jsx` renders a single trip card. `TripChat.jsx` is the in-trip chat component.
+
+### `src/contexto/`
+
+Contains `auth.jsx`, which exports `AuthContext` and `AuthProvider`. The provider reads a JWT from `localStorage` on mount, decodes it with `jwt-decode`, and exposes `{ usuario, login, logout, cargando }` to the component tree.
+
+### `src/servicios/`
+
+Contains `api.js`, the single Axios instance used across the app. A request interceptor automatically attaches the `Authorization: Bearer <token>` header when a token is present in `localStorage`.
+
+## API base URL configuration
+
+The API base URL is set in `src/servicios/api.js`:
+
+```javascript
+const api = axios.create({
+  baseURL: 'http://localhost:8000',
+});
+```
+
+If your backend runs on a different host or port, update `baseURL` here. This is the only place you need to change it — all API calls in the app go through this instance.
+
+## Authentication and protected routes
+
+Authentication state is managed globally by `AuthProvider` in `src/contexto/auth.jsx`. On load, it checks `localStorage` for a token, decodes it, and verifies it hasn't expired.
+
+Protected routes use the `RutaProtegida` component (`src/componentes/rutaProtegida.jsx`), which accepts a `rolesPermitidos` prop — an array of role strings:
+
+```jsx
+<Route element={<RutaProtegida rolesPermitidos={['Viatger', 'Creador', 'Admin']} />}>
+  <Route path="/dashboard" element={<ListaViajes />} />
+</Route>
+```
+
+`RutaProtegida` enforces two checks:
+
+1. If no user is logged in, it redirects to `/login`.
+2. If the user's role (read from the JWT `rol` claim) is not in `rolesPermitidos`, it redirects to `/`.
+
+The three roles in the system are:
+
+| Role | Access |
+|---|---|
+| `Viatger` | Standard traveller — can browse trips and request promotion |
+| `Creador` | Trip creator — can create and edit trips |
+| `Admin` | Full access — includes user and request management |

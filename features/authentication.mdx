@@ -1,0 +1,132 @@
+---
+title: "Authentication"
+description: "How TravelConnect handles user registration, login, and JWT-based session management."
+---
+
+TravelConnect uses JWT (JSON Web Tokens) for authentication. You register once, then exchange your credentials for a token that you include in every subsequent request.
+
+## Registration
+
+Send a `POST` request to `/auth/register` with your full name, email, and password. The `rol` field defaults to `Viatger` — you cannot self-assign a higher role at registration time.
+
+```json
+// POST /auth/register
+{
+  "full_name": "Maria García",
+  "email": "maria@example.com",
+  "password": "mysecretpassword",
+  "rol": "Viatger"
+}
+```
+
+If the email is already taken the API returns `400 Bad Request`.
+
+## Login
+
+The login endpoint uses the OAuth2 password flow, so the request body must be `application/x-www-form-urlencoded`. The `username` field accepts the user's email address.
+
+```bash
+POST /auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=maria@example.com&password=mysecretpassword
+```
+
+A successful response looks like:
+
+```json
+{
+  "access_token": "<jwt>",
+  "token_type": "bearer",
+  "rol": "Viatger"
+}
+```
+
+<Note>
+The `rol` field in the response body is provided as a convenience so the frontend can redirect users without decoding the token first.
+</Note>
+
+### Axios example
+
+```javascript
+import axios from 'axios';
+
+async function login(email, password) {
+  const params = new URLSearchParams();
+  params.append('username', email);
+  params.append('password', password);
+
+  const { data } = await axios.post('/auth/login', params, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+
+  // Store the token and update auth context
+  localStorage.setItem('token', data.access_token);
+  return data;
+}
+```
+
+## JWT token structure
+
+The token payload contains three application-level claims in addition to the standard `exp` expiry:
+
+| Claim | Type | Description |
+|-------|------|-------------|
+| `sub` | string | The user's numeric ID (stored as a string) |
+| `rol` | string | The user's role: `Viatger`, `Creador`, or `Admin` |
+| `username` | string | The user's `full_name`, or their email if `full_name` is not set |
+
+Tokens expire after **30 minutes**.
+
+## How the frontend stores the token
+
+After a successful login, the frontend calls `login(token)` from `AuthContext`. This function:
+
+1. Persists the raw JWT string to `localStorage` under the key `token`.
+2. Decodes the token with `jwtDecode` and sets the in-memory `usuario` state:
+
+```javascript
+// src/contexto/auth.jsx
+const login = (token) => {
+  localStorage.setItem('token', token);
+  const decoded = jwtDecode(token);
+  setUsuario({
+    id: decoded.sub,
+    username: decoded.username || decoded.sub,
+    role: decoded.rol || decoded.role,
+    token: token,
+  });
+};
+```
+
+On every page load, `AuthProvider` reads `localStorage`, checks the `exp` claim, and calls `logout()` automatically if the token has expired.
+
+## Protected routes
+
+The `RutaProtegida` component wraps React Router `<Route>` elements and enforces role-based access. It receives a `rolesPermitidos` array and redirects unauthenticated or unauthorized users.
+
+```jsx
+// Only Creador and Admin can reach these routes
+<Route element={<RutaProtegida rolesPermitidos={['Creador', 'Admin']} />}>
+  <Route path="/trips/create" element={<CrearViaje />} />
+  <Route path="/trips/:id/edit" element={<EditarViaje />} />
+</Route>
+```
+
+The full route-to-role mapping is:
+
+| Route | Allowed roles |
+|-------|---------------|
+| `/dashboard`, `/trips/:id`, `/profile` | Viatger, Creador, Admin |
+| `/promotion` | Viatger only |
+| `/trips/create`, `/trips/:id/edit` | Creador, Admin |
+| `/admin/users`, `/admin/requests` | Admin only |
+
+## Backend token validation
+
+The `get_current_user` dependency in `auth/deps.py` validates every protected request:
+
+1. Extracts the `Authorization: Bearer <token>` header via the OAuth2 scheme.
+2. Decodes the JWT and reads `sub` (the user ID).
+3. Queries the database for a `Usuari` row matching that ID.
+4. Returns the user object, or raises `401` / `404` if validation fails.

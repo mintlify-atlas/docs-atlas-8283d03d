@@ -1,0 +1,91 @@
+---
+title: "Get trip"
+description: "GET /viatge/trips/{id} — retrieve a single trip by ID."
+---
+
+Returns the details of a single trip. No authentication is required.
+
+## Request
+
+**`GET /viatge/trips/{id}`**
+
+### Path parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the trip.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="integer" required>
+  Unique trip identifier.
+</ResponseField>
+
+<ResponseField name="nom" type="string" required>
+  The trip's name.
+</ResponseField>
+
+<ResponseField name="desti" type="string" required>
+  The destination of the trip.
+</ResponseField>
+
+<ResponseField name="data_inici" type="string" required>
+  Start date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="data_fi" type="string" required>
+  End date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="descripcio" type="string">
+  A description of the trip.
+</ResponseField>
+
+<ResponseField name="estat" type="string" required>
+  Planning status. One of `"Planificant"`, `"Actiu"`, `"Complet"`, or `"Cancel·lat"`.
+</ResponseField>
+
+<ResponseField name="maxim_participants" type="integer" required>
+  Maximum number of participants allowed.
+</ResponseField>
+
+<ResponseField name="creador_id" type="integer" required>
+  ID of the user who created the trip.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl http://localhost:8000/viatge/trips/1
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.get('http://localhost:8000/viatge/trips/1');
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 1,
+  "nom": "Weekend in Barcelona",
+  "desti": "Barcelona",
+  "data_inici": "2026-04-10",
+  "data_fi": "2026-04-12",
+  "descripcio": "A relaxing weekend getaway.",
+  "estat": "Planificant",
+  "maxim_participants": 10,
+  "creador_id": 5
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `404` | Trip with the given ID was not found |

@@ -1,0 +1,110 @@
+---
+title: "Quickstart"
+description: "Get TravelConnect running locally and create your first trip"
+---
+
+<Note>
+  You need **Python 3.10+** and **Node.js 18+** installed before you begin. The backend also requires a running **MySQL** instance — the default connection expects a database named `travelconect` on `localhost:3306` with username `root` and password `1234`.
+</Note>
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the TravelConnect repository and navigate into it:
+
+    ```bash
+    git clone https://github.com/SergiCocaA/PJ2-TravelConect.git
+    cd PJ2-TravelConect
+    ```
+  </Step>
+
+  <Step title="Install backend dependencies">
+    Navigate to the `Backend` directory and install the required Python packages:
+
+    ```bash
+    cd Backend
+    pip install fastapi uvicorn sqlalchemy pymysql python-jose[cryptography] passlib[bcrypt] bcrypt python-multipart
+    ```
+
+    <Tip>
+      Use a virtual environment to keep your system Python clean:
+
+      ```bash
+      python -m venv .venv
+      source .venv/bin/activate  # Windows: .venv\Scripts\activate
+      pip install fastapi uvicorn sqlalchemy pymysql python-jose[cryptography] passlib[bcrypt] bcrypt python-multipart
+      ```
+    </Tip>
+  </Step>
+
+  <Step title="Start the backend server">
+    From inside the `Backend` directory, start the FastAPI server with Uvicorn:
+
+    ```bash
+    uvicorn main:app --reload
+    ```
+
+    The API is now running at `http://localhost:8000`. SQLAlchemy automatically creates all database tables on first startup.
+
+    Confirm it's working by opening the interactive Swagger docs:
+
+    ```
+    http://localhost:8000/docs
+    ```
+
+    You should see all six router modules listed: `auth`, `users`, `viatge`, `creadorViatges`, `missatges`, and `admin`.
+  </Step>
+
+  <Step title="Install frontend dependencies">
+    Open a new terminal, navigate to the `FrontEnd` directory, and install npm packages:
+
+    ```bash
+    cd FrontEnd
+    npm install
+    ```
+  </Step>
+
+  <Step title="Start the frontend dev server">
+    Start the Vite development server:
+
+    ```bash
+    npm run dev
+    ```
+
+    The app is now available at `http://localhost:5173`. Vite proxies API requests to the backend at `http://localhost:8000`.
+  </Step>
+
+  <Step title="Register an account">
+    Open `http://localhost:5173/register` in your browser. Fill in your email, full name, and password.
+
+    All new accounts are assigned the **Viatger** role by default. You can request a promotion to **Creador** later from your profile page (`/promotion`).
+  </Step>
+
+  <Step title="Browse available trips">
+    After registering, log in at `http://localhost:5173/login`. You'll be redirected to the dashboard at `/dashboard`, where you can:
+
+    - Browse all available trips
+    - Click a trip to view its details and participant list
+    - Enroll in a trip to join its chat
+
+    <Tip>
+      To create trips, your account needs the **Creador** or **Admin** role. Submit a promotion request from `/promotion` and have an Admin approve it from `/admin/requests`.
+    </Tip>
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="building" href="/getting-started/architecture">
+    Understand how the React frontend and FastAPI backend communicate
+  </Card>
+  <Card title="User roles" icon="users" href="/features/user-roles">
+    Learn what Viatger, Creador, and Admin can each do
+  </Card>
+  <Card title="Authentication" icon="lock" href="/features/authentication">
+    See how JWT tokens are issued and validated
+  </Card>
+  <Card title="API reference" icon="code" href="/api/overview">
+    Explore every endpoint in the REST API
+  </Card>
+</CardGroup>

@@ -1,0 +1,102 @@
+---
+title: "Admin panel"
+description: "The two admin screens for managing users and processing promotion requests."
+---
+
+The admin panel consists of two screens, both accessible only to users with the **Admin** role:
+
+- **User management** at `/admin/users`
+- **Promotion requests** at `/admin/requests`
+
+<Warning>
+Both routes are wrapped in `RutaProtegida` with `rolesPermitidos={['Admin']}`. Any non-Admin user who tries to access these URLs is redirected away immediately.
+</Warning>
+
+## User management (`/admin/users`)
+
+The user management screen fetches the full list of registered accounts from `GET /admin/users` and displays them in a table showing ID, full name, email, and current role.
+
+```bash
+GET /admin/users
+```
+
+Returns an array of `UsuariResponse` objects.
+
+### Changing a user's role
+
+Next to each non-Admin user, a **Cambiar a Creador** or **Cambiar a Viajero** button lets you toggle between the `Viatger` and `Creador` roles:
+
+```bash
+PUT /admin/users/{user_id}/promote
+Content-Type: application/json
+
+{
+  "new_rol": "Creador"
+}
+```
+
+```javascript
+// gestioUsuaris.jsx
+await api.put(`/admin/users/${id}/promote`, { new_rol: newRole });
+```
+
+<Note>
+Admin accounts cannot have their role changed from the user management screen — the action button is hidden for Admin rows.
+</Note>
+
+## Promotion requests (`/admin/requests`)
+
+The promotion requests screen fetches all `PeticioPromo` records from `GET /admin/users/promotions`. Each row shows the requesting user's ID, their justification message, and the request status (`pendent`, `aprovat`, or `denegat`).
+
+```bash
+GET /admin/users/promotions
+```
+
+Action buttons are shown only for requests with `estat === 'pendent'`.
+
+## Approval workflow
+
+<Steps>
+  <Step title="A Viatger submits a promotion request">
+    The user fills in the `/promotion` form. The backend creates a `PeticioPromo` record with `estat: "pendent"`.
+  </Step>
+  <Step title="Admin opens /admin/requests">
+    The screen lists all promotion requests. Pending requests display **Aprobar** and **Denegar** buttons.
+  </Step>
+  <Step title="Admin approves or rejects">
+    Clicking **Aprobar** calls:
+
+    ```bash
+    PUT /admin/promotions/{user_id}
+    Content-Type: application/json
+
+    {
+      "new_estado": "aprovat"
+    }
+    ```
+
+    Clicking **Denegar** sends the same endpoint with `"new_estado": "denegat"`.
+
+    ```javascript
+    // gestioPeticions.jsx
+    const newStatus = action === 'aprova' ? 'aprovat' : 'denegat';
+    await api.put(`/admin/promotions/${id}`, { new_estado: newStatus });
+    ```
+  </Step>
+  <Step title="Update the user's role (if approved)">
+    Approving a request updates the `PeticioPromo` record status but does not automatically change the user's role. Go to `/admin/users` and use the role toggle button to promote the user to **Creador**.
+  </Step>
+</Steps>
+
+<Tip>
+After processing a request, the promotion requests list refreshes automatically so you see the updated status badges immediately.
+</Tip>
+
+## API reference summary
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/admin/users` | List all users |
+| `PUT` | `/admin/users/{user_id}/promote` | Change a user's role |
+| `GET` | `/admin/users/promotions` | List all promotion requests |
+| `PUT` | `/admin/promotions/{user_id}` | Approve or reject a request |

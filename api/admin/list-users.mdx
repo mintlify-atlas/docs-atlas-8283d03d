@@ -1,0 +1,85 @@
+---
+title: "List users"
+description: "GET /admin/users — retrieve all registered users."
+---
+
+Returns a list of all users in the system.
+
+<Note>
+  This endpoint is intended for admin use.
+</Note>
+
+## Request
+
+**`GET /admin/users`**
+
+This endpoint takes no parameters.
+
+## Response
+
+Returns an array of user objects.
+
+<ResponseField name="id" type="integer" required>
+  The user's unique identifier.
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  The user's email address.
+</ResponseField>
+
+<ResponseField name="full_name" type="string">
+  The user's display name.
+</ResponseField>
+
+<ResponseField name="rol" type="string" required>
+  The user's role. One of `"Viatger"`, `"Creador"`, or `"Admin"`.
+</ResponseField>
+
+<ResponseField name="bio" type="string">
+  The user's biography.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl http://localhost:8000/admin/users \
+  -H "Authorization: Bearer <your_token>"
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.get('http://localhost:8000/admin/users', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+[
+  {
+    "id": 1,
+    "email": "admin@example.com",
+    "full_name": "Site Admin",
+    "rol": "Admin",
+    "bio": null
+  },
+  {
+    "id": 42,
+    "email": "alice@example.com",
+    "full_name": "Alice Smith",
+    "rol": "Viatger",
+    "bio": "Avid traveler."
+  }
+]
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `404` | `"Usuarios no encontrados"` — no users found in the database |

@@ -1,0 +1,74 @@
+---
+title: "Get current user"
+description: "GET /users/me — retrieve the authenticated user's profile."
+---
+
+Returns the profile of the currently authenticated user.
+
+<Note>
+  Requires authentication. Include a `Bearer` token in the `Authorization` header.
+</Note>
+
+## Request
+
+**`GET /users/me`**
+
+This endpoint takes no parameters.
+
+## Response
+
+<ResponseField name="id" type="integer" required>
+  The user's unique identifier.
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  The user's email address.
+</ResponseField>
+
+<ResponseField name="full_name" type="string">
+  The user's display name.
+</ResponseField>
+
+<ResponseField name="rol" type="string" required>
+  The user's role. One of `"Viatger"`, `"Creador"`, or `"Admin"`.
+</ResponseField>
+
+<ResponseField name="bio" type="string">
+  The user's biography.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl http://localhost:8000/users/me \
+  -H "Authorization: Bearer <your_token>"
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.get('http://localhost:8000/users/me', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 42,
+  "email": "alice@example.com",
+  "full_name": "Alice Smith",
+  "rol": "Viatger",
+  "bio": "Avid traveler and hiker."
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `401` | Missing or invalid authentication token |

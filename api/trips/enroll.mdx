@@ -1,0 +1,55 @@
+---
+title: "Enroll in a trip"
+description: "POST /viatge/trips/{id}/enroll — join a trip as a participant."
+---
+
+Enroll the authenticated user in a trip.
+
+<Note>
+  Requires authentication. Include a `Bearer` token in the `Authorization` header.
+</Note>
+
+## Request
+
+**`POST /viatge/trips/{id}/enroll`**
+
+### Path parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the trip to enroll in.
+</ParamField>
+
+This endpoint takes no request body.
+
+## Response
+
+Returns a confirmation object on success.
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:8000/viatge/trips/1/enroll \
+  -H "Authorization: Bearer <your_token>"
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.post(
+  'http://localhost:8000/viatge/trips/1/enroll',
+  {},
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log(response.data);
+```
+
+</CodeGroup>
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `400` | Unable to enroll — e.g. already enrolled or trip is full |
+| `401` | Missing or invalid authentication token |

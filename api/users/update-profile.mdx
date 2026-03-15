@@ -1,0 +1,91 @@
+---
+title: "Update profile"
+description: "PUT /users/me/{nom}/{bio} — update your display name and bio."
+---
+
+Update the authenticated user's display name and biography.
+
+<Note>
+  Requires authentication. Include a `Bearer` token in the `Authorization` header.
+</Note>
+
+## Request
+
+**`PUT /users/me/{nom}/{bio}`**
+
+### Path parameters
+
+<ParamField path="nom" type="string" required>
+  The new display name for the user.
+</ParamField>
+
+<ParamField path="bio" type="string" required>
+  The new biography text for the user.
+</ParamField>
+
+This endpoint takes no request body.
+
+## Response
+
+Returns the updated user object.
+
+<ResponseField name="id" type="integer" required>
+  The user's unique identifier.
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  The user's email address.
+</ResponseField>
+
+<ResponseField name="full_name" type="string" required>
+  The updated display name.
+</ResponseField>
+
+<ResponseField name="rol" type="string" required>
+  The user's role.
+</ResponseField>
+
+<ResponseField name="bio" type="string" required>
+  The updated biography.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "http://localhost:8000/users/me/Alice%20Smith/Avid%20traveler%20and%20hiker" \
+  -H "Authorization: Bearer <your_token>"
+```
+
+```javascript axios
+import axios from 'axios';
+
+const nom = encodeURIComponent('Alice Smith');
+const bio = encodeURIComponent('Avid traveler and hiker');
+
+const response = await axios.put(
+  `http://localhost:8000/users/me/${nom}/${bio}`,
+  {},
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 42,
+  "email": "alice@example.com",
+  "full_name": "Alice Smith",
+  "rol": "Viatger",
+  "bio": "Avid traveler and hiker"
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `401` | Missing or invalid authentication token |

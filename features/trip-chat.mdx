@@ -1,0 +1,81 @@
+---
+title: "Trip chat"
+description: "Per-trip group messaging for enrolled participants and admins."
+---
+
+Every trip has a dedicated group chat. The chat is accessible from the **Chat del Grupo** tab on the trip detail page at `/trips/:id`.
+
+## Access rules
+
+The chat tab is rendered only when `canSeeChat` is `true`. This condition is met when:
+
+- The user is **enrolled** in the trip (`isEnrolled === true`), or
+- The user holds the **Admin** role.
+
+Users with the Viatger role who are not enrolled, and users with the Creador role who did not create the trip and are not enrolled, cannot see the chat tab.
+
+<Note>
+You must be logged in to send messages. Reading messages from the `GET` endpoint does not require authentication, but the send endpoint enforces `get_current_user`.
+</Note>
+
+## Endpoints
+
+### Fetch messages
+
+```bash
+GET /missatges/trips/{trip_id}/chat
+```
+
+Returns an array of message objects. No authentication required.
+
+```json
+[
+  {
+    "id": 1,
+    "viatge_id": 42,
+    "autor_id": 7,
+    "contingut": "Has anyone booked accommodation yet?",
+    "autor_nom": "Maria García"
+  }
+]
+```
+
+The `autor_nom` field is resolved server-side: it contains `full_name` if the author has one set, otherwise their `email`.
+
+### Send a message
+
+```bash
+POST /missatges/trips/{trip_id}/chat/send
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "contingut": "I've found a great hostel near the centre!"
+}
+```
+
+Returns the newly created message object including the resolved `autor_nom`.
+
+## Frontend implementation
+
+The `TripChat` component (`src/componentes/TripChat.jsx`) receives `tripId` and `usuario` as props. It fetches messages on mount and after each send:
+
+```javascript
+import { getChatMessages, sendChatMessage } from '../servicios/api';
+
+// Fetch
+const { data } = await getChatMessages(tripId);
+
+// Send
+await sendChatMessage(tripId, { contingut: text });
+```
+
+The component provides a manual **Actualizar** button to refresh the message list on demand.
+
+<Tip>
+The chat does not poll automatically. Use the Actualizar button to load new messages from other participants.
+</Tip>
+
+## Message display
+
+Each message renders the author's name in blue (`autor_nom`) followed by the message body (`contingut`). If `autor_nom` is not set, the UI falls back to displaying "Usuario".

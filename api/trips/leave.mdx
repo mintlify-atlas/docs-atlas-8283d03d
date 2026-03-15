@@ -1,0 +1,54 @@
+---
+title: "Leave a trip"
+description: "POST /viatge/trips/{id}/leave — withdraw from a trip."
+---
+
+Remove the authenticated user from a trip's participant list.
+
+<Note>
+  Requires authentication. Include a `Bearer` token in the `Authorization` header.
+</Note>
+
+## Request
+
+**`POST /viatge/trips/{id}/leave`**
+
+### Path parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the trip to leave.
+</ParamField>
+
+This endpoint takes no request body.
+
+## Response
+
+Returns a confirmation object on success.
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:8000/viatge/trips/1/leave \
+  -H "Authorization: Bearer <your_token>"
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.post(
+  'http://localhost:8000/viatge/trips/1/leave',
+  {},
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log(response.data);
+```
+
+</CodeGroup>
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `401` | Missing or invalid authentication token |

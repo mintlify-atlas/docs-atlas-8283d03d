@@ -1,0 +1,108 @@
+---
+title: "Trips"
+description: "Browse available trips, view details, enroll or leave, and request a promotion to Creador."
+---
+
+Trips are the core entity in TravelConnect. Any authenticated user can browse and enroll in trips. Users with the Creador or Admin role can also create and edit them.
+
+## Trip model fields
+
+| Field | API name | Type | Description |
+|-------|----------|------|-------------|
+| ID | `id` | integer | Auto-generated primary key |
+| Name | `nom` | string (50) | Display name of the trip |
+| Destination | `desti` | string (50) | Where the trip is going |
+| Start date | `data_inici` | string (YYYY-MM-DD) | Departure date |
+| End date | `data_fi` | string (YYYY-MM-DD) | Return date |
+| Max participants | `maxim_participants` | integer | Capacity cap (default: 10) |
+| Description | `descripcio` | string (200) | Free-text summary |
+| Status | `estat` | string | Current lifecycle state |
+| Creator | `creador_id` | integer | ID of the user who created it |
+
+## Trip statuses
+
+| Status | Meaning |
+|--------|---------|
+| `Planificant` | The trip is being planned and is open for enrollment |
+| `Actiu` | The trip is underway |
+| `Complet` | The trip has reached maximum capacity or has finished |
+| `Cancel·lat` | The trip has been cancelled |
+
+## Browsing trips
+
+The trip list is available to all authenticated users at `/dashboard`. The frontend fetches all trips from `GET /viatge/trips` and renders a card for each one. Clicking a card navigates to `/trips/:id`.
+
+```javascript
+// Fetch all trips
+const { data } = await api.get('/viatge/trips');
+```
+
+To fetch a single trip with its participant list:
+
+```javascript
+// GET /viatge/trips/{id}
+const { data } = await api.get(`/viatge/trips/${id}`);
+// data.participants is an array of enrolled user objects
+```
+
+## Enrolling in a trip
+
+<Steps>
+  <Step title="Browse to the trip detail page">
+    Navigate to `/trips/:id`. The page displays the trip's destination, dates, participant count, and description.
+  </Step>
+  <Step title="Click Inscribirse ahora">
+    The enroll button is visible to authenticated users with the Viatger role who are not yet enrolled. It calls `POST /viatge/trips/{id}/enroll`.
+
+    ```javascript
+    await api.post(`/viatge/trips/${id}/enroll`);
+    ```
+  </Step>
+  <Step title="Confirm enrollment">
+    After a successful response the page reloads the trip data so the participant count and your enrollment status update immediately.
+  </Step>
+</Steps>
+
+<Note>
+If the trip is full or you are already enrolled, the API returns `400 Bad Request` with a descriptive error message.
+</Note>
+
+## Leaving a trip
+
+If you are already enrolled, you can withdraw by calling:
+
+```javascript
+// POST /viatge/trips/{id}/leave
+await api.post(`/viatge/trips/${id}/leave`);
+```
+
+## Trip chat access
+
+The chat tab on the trip detail page is only visible to users who are enrolled in the trip, or to Admins. See [Trip chat](/features/trip-chat) for details.
+
+## Requesting a promotion to Creador
+
+If you hold the Viatger role and want to create your own trips, you can submit a promotion request from `/promotion`.
+
+<Steps>
+  <Step title="Navigate to the promotion form">
+    Go to `/promotion`. This route is only accessible to users with the Viatger role.
+  </Step>
+  <Step title="Write your justification">
+    Describe why you want to become a Creador and what kind of trips you plan to offer.
+  </Step>
+  <Step title="Submit the request">
+    The form sends `POST /viatge/promote-request` with your message:
+
+    ```javascript
+    await api.post('/viatge/promote-request', { missatge: motiu });
+    ```
+  </Step>
+  <Step title="Wait for admin review">
+    An Admin reviews your request in the [admin panel](/features/admin-panel). You will be redirected to `/dashboard` after submission.
+  </Step>
+</Steps>
+
+<Tip>
+You can only have one pending promotion request at a time. Check the admin panel or contact an Admin if you need an update on your request status.
+</Tip>

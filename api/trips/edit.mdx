@@ -1,0 +1,138 @@
+---
+title: "Edit a trip"
+description: "PUT /creadorViatges/creator/trips/{id} — update an existing trip."
+---
+
+Update one or more fields of an existing trip. A `Creador` can only edit their own trips. An `Admin` can edit any trip.
+
+<Note>
+  Requires authentication. The authenticated user must have the `Creador` or `Admin` role. Creators can only edit trips they own.
+</Note>
+
+## Request
+
+**`PUT /creadorViatges/creator/trips/{id}`**
+
+### Path parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the trip to update.
+</ParamField>
+
+### Body parameters
+
+Provide only the fields you want to update.
+
+<ParamField body="nom" type="string">
+  Updated trip name.
+</ParamField>
+
+<ParamField body="desti" type="string">
+  Updated destination.
+</ParamField>
+
+<ParamField body="data_inici" type="string">
+  Updated start date in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="data_fi" type="string">
+  Updated end date in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="maxim_participants" type="integer">
+  Updated maximum participant count.
+</ParamField>
+
+<ParamField body="descripcio" type="string">
+  Updated description.
+</ParamField>
+
+<ParamField body="estat" type="string">
+  Updated planning status. One of `"Planificant"`, `"Actiu"`, `"Complet"`, or `"Cancel·lat"`.
+</ParamField>
+
+## Response
+
+Returns the full updated trip object.
+
+<ResponseField name="id" type="integer" required>
+  Trip identifier.
+</ResponseField>
+
+<ResponseField name="nom" type="string" required>
+  Trip name.
+</ResponseField>
+
+<ResponseField name="desti" type="string" required>
+  Destination.
+</ResponseField>
+
+<ResponseField name="data_inici" type="string" required>
+  Start date.
+</ResponseField>
+
+<ResponseField name="data_fi" type="string" required>
+  End date.
+</ResponseField>
+
+<ResponseField name="descripcio" type="string">
+  Description.
+</ResponseField>
+
+<ResponseField name="estat" type="string" required>
+  Planning status.
+</ResponseField>
+
+<ResponseField name="maxim_participants" type="integer" required>
+  Maximum participants.
+</ResponseField>
+
+<ResponseField name="creador_id" type="integer" required>
+  ID of the trip creator.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT http://localhost:8000/creadorViatges/creator/trips/7 \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"estat": "Actiu", "maxim_participants": 15}'
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.put(
+  'http://localhost:8000/creadorViatges/creator/trips/7',
+  { estat: 'Actiu', maxim_participants: 15 },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 7,
+  "nom": "Alpine Hiking Week",
+  "desti": "Swiss Alps",
+  "data_inici": "2026-07-01",
+  "data_fi": "2026-07-07",
+  "descripcio": "A week of guided hiking in the Alps.",
+  "estat": "Actiu",
+  "maxim_participants": 15,
+  "creador_id": 3
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `401` | Missing or invalid authentication token |
+| `403` | `"No tens permisos"` — your role is not `Creador` or `Admin` |
+| `404` | `"Viatge no trobat o no ets el creador"` — trip not found or you do not own it |

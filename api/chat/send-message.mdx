@@ -1,0 +1,94 @@
+---
+title: "Send message"
+description: "POST /missatges/trips/{trip_id}/chat/send — send a chat message to a trip."
+---
+
+Send a chat message to a trip's chat channel.
+
+<Note>
+  Requires authentication. Include a `Bearer` token in the `Authorization` header.
+</Note>
+
+## Request
+
+**`POST /missatges/trips/{trip_id}/chat/send`**
+
+### Path parameters
+
+<ParamField path="trip_id" type="integer" required>
+  The unique identifier of the trip to send the message to.
+</ParamField>
+
+### Body parameters
+
+<ParamField body="contingut" type="string" required>
+  The text content of the message.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="integer" required>
+  Unique identifier of the created message.
+</ResponseField>
+
+<ResponseField name="contingut" type="string" required>
+  The text content of the message.
+</ResponseField>
+
+<ResponseField name="viatge_xat" type="integer" required>
+  ID of the trip this message belongs to.
+</ResponseField>
+
+<ResponseField name="autor_xat" type="integer" required>
+  ID of the user who sent the message.
+</ResponseField>
+
+<ResponseField name="autor_nom" type="string">
+  Display name of the message author.
+</ResponseField>
+
+<ResponseField name="timestamp" type="string" required>
+  ISO 8601 datetime string indicating when the message was sent.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:8000/missatges/trips/1/chat/send \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"contingut": "Can'\''t wait for the trip!"}'
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.post(
+  'http://localhost:8000/missatges/trips/1/chat/send',
+  { contingut: "Can't wait for the trip!" },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 102,
+  "contingut": "Can't wait for the trip!",
+  "viatge_xat": 1,
+  "autor_xat": 42,
+  "autor_nom": "Alice Smith",
+  "timestamp": "2026-03-15T10:00:00"
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `400` | `"Error al crear missatge"` — message could not be created |
+| `401` | Missing or invalid authentication token |

@@ -1,0 +1,80 @@
+---
+title: "Introduction"
+description: "TravelConnect is a full-stack travel planning platform where users can discover, join, and manage group trips."
+---
+
+## What is TravelConnect?
+
+TravelConnect is a web application that brings travelers together. It lets users discover group trips, join adventures, and communicate with fellow travelers — all in one place.
+
+The platform has three distinct user roles, each with different capabilities:
+
+- **Viatger (Traveler)** — Browse available trips, enroll in trips, and chat with other participants
+- **Creador (Trip Creator)** — Everything a Traveler can do, plus create and manage trips
+- **Admin** — Full platform access including user management and promotion approvals
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Set up TravelConnect and take your first trip in minutes
+  </Card>
+  <Card title="Architecture" icon="building" href="/getting-started/architecture">
+    Understand how the frontend and backend work together
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore the full REST API documentation
+  </Card>
+  <Card title="User Roles" icon="users" href="/features/user-roles">
+    Learn about Viatger, Creador, and Admin roles
+  </Card>
+</CardGroup>
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="lock" href="/features/authentication">
+    JWT-based login and registration with role-aware tokens
+  </Card>
+  <Card title="Trip management" icon="map" href="/features/trips">
+    Browse, join, and leave group trips with ease
+  </Card>
+  <Card title="Trip chat" icon="message" href="/features/trip-chat">
+    Real-time messaging within each trip's participant group
+  </Card>
+  <Card title="Trip creator tools" icon="pen" href="/features/trip-creator">
+    Create and edit trips as a Creador or Admin
+  </Card>
+  <Card title="Promotion requests" icon="arrow-up" href="/features/user-roles">
+    Travelers can apply to become Trip Creators
+  </Card>
+  <Card title="Admin panel" icon="shield" href="/features/admin-panel">
+    Manage users and handle promotion requests
+  </Card>
+</CardGroup>
+
+## Tech stack
+
+TravelConnect is built with a modern, decoupled architecture:
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, Vite, React Router v7, Bootstrap 5 |
+| Backend | Python, FastAPI, SQLAlchemy ORM |
+| Auth | JWT (JSON Web Tokens) with role claims |
+| HTTP Client | Axios |
+
+## Getting started
+
+<Steps>
+  <Step title="Set up the backend">
+    Install Python dependencies and start the FastAPI server. See the [backend setup guide](/guides/backend-setup).
+  </Step>
+  <Step title="Set up the frontend">
+    Install Node.js dependencies and start the Vite dev server. See the [frontend setup guide](/guides/frontend-setup).
+  </Step>
+  <Step title="Register an account">
+    Visit `http://localhost:5173/register` to create your first account. New users start with the **Viatger** role.
+  </Step>
+  <Step title="Explore trips">
+    Log in and navigate to the dashboard to see available trips. Enroll in one to join the trip chat.
+  </Step>
+</Steps>

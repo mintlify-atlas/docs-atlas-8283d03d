@@ -1,0 +1,85 @@
+---
+title: "List trips"
+description: "GET /viatge/trips — retrieve all available trips."
+---
+
+Returns a list of all trips in the system. No authentication is required.
+
+## Request
+
+**`GET /viatge/trips`**
+
+This endpoint takes no parameters.
+
+## Response
+
+Returns an array of trip objects.
+
+<ResponseField name="id" type="integer" required>
+  Unique trip identifier.
+</ResponseField>
+
+<ResponseField name="nom" type="string" required>
+  The trip's name.
+</ResponseField>
+
+<ResponseField name="desti" type="string" required>
+  The destination of the trip.
+</ResponseField>
+
+<ResponseField name="data_inici" type="string" required>
+  Start date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="data_fi" type="string" required>
+  End date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="descripcio" type="string">
+  A description of the trip.
+</ResponseField>
+
+<ResponseField name="estat" type="string" required>
+  Planning status. One of `"Planificant"`, `"Actiu"`, `"Complet"`, or `"Cancel·lat"`.
+</ResponseField>
+
+<ResponseField name="maxim_participants" type="integer" required>
+  Maximum number of participants allowed.
+</ResponseField>
+
+<ResponseField name="creador_id" type="integer" required>
+  ID of the user who created the trip.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl http://localhost:8000/viatge/trips
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.get('http://localhost:8000/viatge/trips');
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+[
+  {
+    "id": 1,
+    "nom": "Weekend in Barcelona",
+    "desti": "Barcelona",
+    "data_inici": "2026-04-10",
+    "data_fi": "2026-04-12",
+    "descripcio": "A relaxing weekend getaway.",
+    "estat": "Planificant",
+    "maxim_participants": 10,
+    "creador_id": 5
+  }
+]
+```

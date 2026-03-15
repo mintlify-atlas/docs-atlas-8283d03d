@@ -1,0 +1,75 @@
+---
+title: "Login"
+description: "POST /auth/login — authenticate and receive a JWT token."
+---
+
+Authenticate with an email and password. On success, you receive a JWT token to use in subsequent requests.
+
+<Note>
+  This endpoint uses `multipart/form-data` (OAuth2 password flow), not JSON. Send `username` and `password` as form fields.
+</Note>
+
+## Request
+
+**`POST /auth/login`**
+
+### Body parameters
+
+<ParamField body="username" type="string" required>
+  The user's email address. This field is named `username` to comply with the OAuth2 password flow spec.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The user's password.
+</ParamField>
+
+## Response
+
+<ResponseField name="access_token" type="string" required>
+  The JWT token to use in the `Authorization: Bearer` header.
+</ResponseField>
+
+<ResponseField name="token_type" type="string" required>
+  Always `"bearer"`.
+</ResponseField>
+
+<ResponseField name="rol" type="string" required>
+  The authenticated user's role. One of `"Viatger"`, `"Creador"`, or `"Admin"`.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:8000/auth/login \
+  -F "username=alice@example.com" \
+  -F "password=secret123"
+```
+
+```javascript axios
+import axios from 'axios';
+
+const params = new URLSearchParams();
+params.append('username', 'alice@example.com');
+params.append('password', 'secret123');
+
+const response = await axios.post('http://localhost:8000/auth/login', params);
+console.log(response.data.access_token);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "rol": "Viatger"
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `401` | `"Email o contrasenya incorrectes"` — credentials did not match any account |

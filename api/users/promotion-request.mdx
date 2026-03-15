@@ -1,0 +1,77 @@
+---
+title: "Request promotion"
+description: "POST /viatge/promote-request — submit a request to become a Creador."
+---
+
+Submit a promotion request to be upgraded from the `Viatger` role to the `Creador` role. An admin will review the request.
+
+<Note>
+  Requires authentication. Intended for users with the `Viatger` role.
+</Note>
+
+## Request
+
+**`POST /viatge/promote-request`**
+
+### Body parameters
+
+<ParamField body="missatge" type="string" required>
+  A message explaining why you want to become a trip creator.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="integer" required>
+  Unique identifier of the promotion request.
+</ResponseField>
+
+<ResponseField name="missatge_peticio" type="string" required>
+  The message submitted with the request.
+</ResponseField>
+
+<ResponseField name="estat" type="string" required>
+  The current status of the request. Starts as `"pendent"`. Can be `"aprovat"` or `"denegat"` once reviewed.
+</ResponseField>
+
+<ResponseField name="usuari_solicitant" type="integer" required>
+  ID of the user who submitted the request.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:8000/viatge/promote-request \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"missatge": "I want to organize hiking trips for our community."}'
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.post(
+  'http://localhost:8000/viatge/promote-request',
+  { missatge: 'I want to organize hiking trips for our community.' },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+{
+  "id": 3,
+  "missatge_peticio": "I want to organize hiking trips for our community.",
+  "estat": "pendent",
+  "usuari_solicitant": 42
+}
+```
+
+## Errors
+
+| Status | Detail |
+|--------|--------|
+| `401` | Missing or invalid authentication token |

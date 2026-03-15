@@ -1,0 +1,77 @@
+---
+title: "User roles"
+description: "The three roles in TravelConnect — Viatger, Creador, and Admin — and what each one can do."
+---
+
+TravelConnect has three roles. Every new account starts as **Viatger**. Roles are stored in the `Usuari` model and embedded in the JWT so the frontend can enforce access rules without an extra API call.
+
+## Role overview
+
+| Capability | Viatger | Creador | Admin |
+|------------|:-------:|:-------:|:-----:|
+| Browse trips | ✓ | ✓ | ✓ |
+| Enroll in / leave trips | ✓ | ✓ | ✓ |
+| Access trip chat (when enrolled) | ✓ | ✓ | ✓ |
+| Access trip chat (all trips) | — | — | ✓ |
+| Request promotion to Creador | ✓ | — | — |
+| Create trips | — | ✓ | ✓ |
+| Edit own trips | — | ✓ | ✓ |
+| Edit any trip | — | — | ✓ |
+| Manage users | — | — | ✓ |
+| Approve/reject promotion requests | — | — | ✓ |
+
+## Viatger
+
+The default role for all new registrations. A Viatger can browse the trip catalogue, enroll in and leave trips, and participate in the group chat of trips they have joined.
+
+If a Viatger wants to create their own trips, they can submit a promotion request via the `/promotion` form. This route is only accessible to the Viatger role.
+
+## Creador
+
+A Creador can do everything a Viatger can, plus create new trips (`POST /creadorViatges/creator/trips`) and edit trips they own (`PUT /creadorViatges/creator/trips/{id}`).
+
+A Creador cannot edit trips they did not create. The backend checks `creador_id` ownership in the CRUD layer and returns `404` if the record is not found or does not belong to them.
+
+<Warning>
+A Creador cannot demote themselves or manage other users. Only an Admin can change roles.
+</Warning>
+
+## Admin
+
+An Admin has full access to every feature. On top of the Creador capabilities, Admins can edit any trip regardless of ownership, access the chat of any trip, manage all user accounts at `/admin/users`, and process promotion requests at `/admin/requests`.
+
+## Promotion request flow
+
+The workflow for a Viatger to become a Creador is:
+
+<Steps>
+  <Step title="Viatger submits a request">
+    The user fills in the `/promotion` form with a justification message. The frontend calls `POST /viatge/promote-request` with `{ "missatge": "..." }`.
+  </Step>
+  <Step title="Request is stored as pending">
+    The backend creates a `PeticioPromo` record with `estat: "pendent"` linked to the requesting user.
+  </Step>
+  <Step title="Admin reviews the request">
+    The Admin opens `/admin/requests`, which fetches `GET /admin/users/promotions`. The table shows the user ID, their justification message, and the current status (`pendent`, `aprovat`, or `denegat`).
+  </Step>
+  <Step title="Admin approves or rejects">
+    Clicking **Aprobar** sends `PUT /admin/promotions/{user_id}` with `{ "new_estado": "aprovat" }`. Clicking **Denegar** sends the same endpoint with `{ "new_estado": "denegat" }`.
+  </Step>
+  <Step title="Role is updated">
+    When a request is approved, the Admin can then update the user's role directly in `/admin/users` using `PUT /admin/users/{user_id}/promote` with `{ "new_rol": "Creador" }`.
+  </Step>
+</Steps>
+
+## Frontend route enforcement
+
+The `RutaProtegida` component checks `usuario.role` from `AuthContext` against the `rolesPermitidos` array. If the current role is not in the list, the user is redirected away from the route.
+
+```jsx
+// Admin-only routes
+<Route element={<RutaProtegida rolesPermitidos={['Admin']} />}>
+  <Route path="/admin/users" element={<GestioUsuaris />} />
+  <Route path="/admin/requests" element={<GestioPeticions />} />
+</Route>
+```
+
+The role value stored in `AuthContext` comes from the `rol` claim in the decoded JWT.

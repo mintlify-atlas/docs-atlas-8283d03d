@@ -1,0 +1,74 @@
+---
+title: "Get messages"
+description: "GET /missatges/trips/{trip_id}/chat — retrieve chat messages for a trip."
+---
+
+Returns all chat messages for a given trip. No authentication is required.
+
+## Request
+
+**`GET /missatges/trips/{trip_id}/chat`**
+
+### Path parameters
+
+<ParamField path="trip_id" type="integer" required>
+  The unique identifier of the trip whose chat you want to read.
+</ParamField>
+
+## Response
+
+Returns an array of message objects.
+
+<ResponseField name="id" type="integer" required>
+  Unique message identifier.
+</ResponseField>
+
+<ResponseField name="contingut" type="string" required>
+  The text content of the message.
+</ResponseField>
+
+<ResponseField name="viatge_xat" type="integer" required>
+  ID of the trip this message belongs to.
+</ResponseField>
+
+<ResponseField name="autor_xat" type="integer" required>
+  ID of the user who sent the message.
+</ResponseField>
+
+<ResponseField name="autor_nom" type="string">
+  Display name of the message author. Falls back to the author's email if no name is set.
+</ResponseField>
+
+<ResponseField name="timestamp" type="string" required>
+  ISO 8601 datetime string indicating when the message was sent.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl http://localhost:8000/missatges/trips/1/chat
+```
+
+```javascript axios
+import axios from 'axios';
+
+const response = await axios.get('http://localhost:8000/missatges/trips/1/chat');
+console.log(response.data);
+```
+
+</CodeGroup>
+
+```json 200
+[
+  {
+    "id": 101,
+    "contingut": "Can't wait for the trip!",
+    "viatge_xat": 1,
+    "autor_xat": 42,
+    "autor_nom": "Alice Smith",
+    "timestamp": "2026-03-15T09:30:00"
+  }
+]
+```

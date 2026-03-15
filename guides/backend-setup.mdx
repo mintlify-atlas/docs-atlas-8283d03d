@@ -1,0 +1,138 @@
+---
+title: "Backend setup"
+description: "Set up the TravelConnect FastAPI backend, configure the database connection, and understand the router structure."
+---
+
+The TravelConnect backend is a FastAPI application backed by MySQL via SQLAlchemy. It exposes a REST API consumed by the React frontend and provides an interactive Swagger UI for exploring endpoints.
+
+## Prerequisites
+
+| Requirement | Minimum version |
+|---|---|
+| Python | 3.8+ |
+| pip | bundled with Python |
+| MySQL | 5.7+ or 8.0+ |
+
+## Installation
+
+<Steps>
+  <Step title="Create the database">
+    Log in to MySQL and create the database:
+
+    ```sql
+    CREATE DATABASE travelconect;
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    From the `Backend/` directory, install the required Python packages:
+
+    ```bash
+    pip install fastapi uvicorn sqlalchemy pymysql python-jose passlib bcrypt python-multipart
+    ```
+
+    | Package | Purpose |
+    |---|---|
+    | `fastapi` | Web framework |
+    | `uvicorn` | ASGI server |
+    | `sqlalchemy` | ORM and database toolkit |
+    | `pymysql` | MySQL driver for SQLAlchemy |
+    | `python-jose` | JWT creation and verification |
+    | `passlib` / `bcrypt` | Password hashing |
+    | `python-multipart` | Form data parsing (required by OAuth2 login) |
+  </Step>
+
+  <Step title="Configure the database URL">
+    Open `db/database.py` and update the connection string to match your MySQL credentials:
+
+    ```python
+    DATABASE_URL = "mysql+pymysql://root:1234@localhost:3306/travelconect"
+    ```
+
+    The format is `mysql+pymysql://<user>:<password>@<host>:<port>/<database>`.
+  </Step>
+
+  <Step title="Start the server">
+    From the `Backend/` directory, start uvicorn:
+
+    ```bash
+    uvicorn main:app --reload
+    ```
+
+    The `--reload` flag restarts the server automatically when you save a file. Remove it in production.
+
+    The API starts at `http://localhost:8000`.
+  </Step>
+</Steps>
+
+## Database setup
+
+SQLAlchemy manages the database schema. When the server starts, `main.py` calls:
+
+```python
+Base.metadata.create_all(bind=engine)
+```
+
+This inspects all models registered to `Base` and creates any missing tables automatically. You don't need to run migrations for a fresh setup — starting the server is enough.
+
+The database connection is defined in `db/database.py` using a connection pool with `pool_pre_ping=True`, which tests connections before use and discards stale ones.
+
+## Router structure
+
+The API is split into six routers, each responsible for a distinct area of the application:
+
+| Router file | URL prefix | Responsibility |
+|---|---|---|
+| `routers/auth.py` | `/auth` | Login (`/auth/login`) and registration (`/auth/register`) |
+| `routers/usuari.py` | `/users` | User profile management |
+| `routers/viatge.py` | `/viatge` | Trip listing and details |
+| `routers/creadorViatges.py` | `/creadorViatges` | Trip creation and editing (Creador role) |
+| `routers/missatges.py` | `/missatges` | In-trip chat messages |
+| `routers/administrador.py` | `/admin` | Admin operations (user and request management) |
+
+All routers are registered in `main.py` with `app.include_router()`.
+
+## CORS configuration
+
+The backend is configured to accept requests from the React frontend running on `localhost:5173`:
+
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+If you run the frontend on a different port, add the new origin to `allow_origins` in `main.py`.
+
+## Authentication
+
+The API uses JWT bearer tokens for authentication. Tokens are issued at `/auth/login` and expire after 30 minutes (`ACCESS_TOKEN_EXPIRE_MINUTES = 30` in `auth/config.py`).
+
+Tokens carry three claims used by the frontend:
+
+| Claim | Value |
+|---|---|
+| `sub` | User ID |
+| `rol` | User role (`Viatger`, `Creador`, or `Admin`) |
+| `username` | User's full name or email |
+
+<Warning>
+  The `SECRET_KEY` in `auth/config.py` is set to `"clavemegasecreta"` by default. You must replace this with a long, randomly generated secret before deploying to any environment beyond your local machine. Anyone who knows the secret key can forge valid tokens.
+
+  Generate a strong key with:
+
+  ```bash
+  python -c "import secrets; print(secrets.token_hex(32))"
+  ```
+</Warning>
+
+## Swagger UI
+
+FastAPI automatically generates interactive API documentation. With the server running, open `http://localhost:8000/docs` in your browser to explore all endpoints, view request/response schemas, and make test requests directly from the UI.
